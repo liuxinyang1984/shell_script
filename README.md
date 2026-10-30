@@ -7,6 +7,7 @@
 | 脚本 | 作用 |
 |------|------|
 | `sb-fcitx` | fcitx5：拼 / 五 / En |
+| `sb-battery` | 电池图标 + 电量%（无 BAT* 则空输出） |
 | `sb-datetime` | `%A %m-%d %H:%M:%S` |
 
 安装到 `PREFIX/bin`（须在 PATH）：

@@ -1,0 +1,45 @@
+#!/bin/sh
+# dwmblocks：电池图标 + 电量%（无电池则无输出）
+# 图标约定对齐 tmux：充电 󰂄、满电 󰚥、放电按档位 󰁹…󰁺
+
+bat=
+for d in /sys/class/power_supply/BAT*; do
+	[ -d "$d" ] || continue
+	bat=$d
+	break
+done
+[ -n "$bat" ] || exit 0
+
+cap=$(cat "$bat/capacity" 2>/dev/null) || exit 0
+stat=$(cat "$bat/status" 2>/dev/null) || stat=Unknown
+
+case "$stat" in
+Charging)
+	icon='󰂄'
+	;;
+Full|"Not charging")
+	icon='󰚥'
+	;;
+*)
+	# Discharging / Unknown：按电量档位
+	if [ "$cap" -ge 95 ] 2>/dev/null; then
+		icon='󰁹'
+	elif [ "$cap" -ge 80 ] 2>/dev/null; then
+		icon='󰂁'
+	elif [ "$cap" -ge 65 ] 2>/dev/null; then
+		icon='󰁿'
+	elif [ "$cap" -ge 50 ] 2>/dev/null; then
+		icon='󰁾'
+	elif [ "$cap" -ge 35 ] 2>/dev/null; then
+		icon='󰁽'
+	elif [ "$cap" -ge 20 ] 2>/dev/null; then
+		icon='󰁼'
+	elif [ "$cap" -ge 10 ] 2>/dev/null; then
+		icon='󰁻'
+	else
+		icon='󰁺'
+	fi
+	;;
+esac
+
+printf '%s %s%%' "$icon" "$cap"
