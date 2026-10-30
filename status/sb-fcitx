@@ -1,0 +1,8 @@
+#!/bin/sh
+# dwmblocks：当前 fcitx5 输入法（拼 / 五 / En）
+im=$(fcitx5-remote -n 2>/dev/null) || true
+case "$im" in
+*pinyin*|*Pinyin*) printf '拼' ;;
+*wbpy*|*wubi*|*Wubi*|*WBPY*) printf '五' ;;
+*) printf 'En' ;;
+esac

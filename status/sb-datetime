@@ -1,0 +1,3 @@
+#!/bin/sh
+# dwmblocks：星期 月-日 时:分:秒（对齐原 slstatus 格式）
+exec date '+%A %m-%d %H:%M:%S'
