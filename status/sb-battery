@@ -1,6 +1,9 @@
 #!/bin/sh
 # dwmblocks：电池图标 + 电量%（无电池则无输出）
 # 图标约定对齐 tmux：充电 󰂄、满电 󰚥、放电按档位 󰁹…󰁺
+#
+# 电量优先用 charge_now/charge_full（或 energy_*）。
+# 部分机型（如 MacBook）的 capacity 相对 design，满电也会显示 ~60%。
 
 bat=
 for d in /sys/class/power_supply/BAT*; do
@@ -10,8 +13,33 @@ for d in /sys/class/power_supply/BAT*; do
 done
 [ -n "$bat" ] || exit 0
 
-cap=$(cat "$bat/capacity" 2>/dev/null) || exit 0
 stat=$(cat "$bat/status" 2>/dev/null) || stat=Unknown
+
+cap=
+if [ -r "$bat/charge_now" ] && [ -r "$bat/charge_full" ]; then
+	now=$(cat "$bat/charge_now")
+	full=$(cat "$bat/charge_full")
+	if [ "$full" -gt 0 ] 2>/dev/null; then
+		cap=$((now * 100 / full))
+	fi
+elif [ -r "$bat/energy_now" ] && [ -r "$bat/energy_full" ]; then
+	now=$(cat "$bat/energy_now")
+	full=$(cat "$bat/energy_full")
+	if [ "$full" -gt 0 ] 2>/dev/null; then
+		cap=$((now * 100 / full))
+	fi
+fi
+[ -n "$cap" ] || cap=$(cat "$bat/capacity" 2>/dev/null) || exit 0
+
+# 内核偶发 >100；Full 时按满电显示
+if [ "$cap" -gt 100 ] 2>/dev/null; then
+	cap=100
+fi
+case "$stat" in
+Full)
+	cap=100
+	;;
+esac
 
 case "$stat" in
 Charging)
@@ -21,7 +49,6 @@ Full|"Not charging")
 	icon='󰚥'
 	;;
 *)
-	# Discharging / Unknown：按电量档位
 	if [ "$cap" -ge 95 ] 2>/dev/null; then
 		icon='󰁹'
 	elif [ "$cap" -ge 80 ] 2>/dev/null; then
