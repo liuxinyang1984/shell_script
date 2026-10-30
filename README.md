@@ -1,8 +1,6 @@
-# shell_scipt
+# shell_script
 
 通用 shell 小脚本。状态栏相关在 `status/`（stdout 一行，供 dwmblocks / tmux 等调用）。
-
-> 仓库名暂为 `shell_scipt`（少字母 r）；建议在 GitHub 上重命名为 `shell_script`。
 
 ## status/
 
