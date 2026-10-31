@@ -5,7 +5,8 @@ step=5%
 
 notify() {
 	command -v notify-send >/dev/null 2>&1 || return 0
-	notify-send -r 9910 -t 1200 -a vol "音量" "$1"
+	# $1=icon  $2=body
+	notify-send -r 9910 -t 1200 -a vol "$1" "$2"
 }
 
 case "${1:-}" in
@@ -24,4 +25,27 @@ mute)
 	;;
 esac
 
-notify "$(wpctl get-volume @DEFAULT_AUDIO_SINK@)"
+raw=$(wpctl get-volume @DEFAULT_AUDIO_SINK@)
+# "Volume: 0.55" 或 "Volume: 0.55 [MUTED]"
+pct=$(printf '%s' "$raw" | awk '{printf "%d", $2 * 100}')
+case "$raw" in
+*[MUTED]*)
+	icon="🔇"
+	body="${pct}%（静音）"
+	;;
+*)
+	if [ "$pct" -le 0 ]; then
+		icon="🔇"
+	elif [ "$pct" -lt 34 ]; then
+		icon="🔈"
+	elif [ "$pct" -lt 67 ]; then
+		icon="🔉"
+	else
+		icon="🔊"
+	fi
+	body="${pct}%"
+	;;
+esac
+
+printf '%s %s\n' "$icon" "$body"
+notify "$icon" "$body"
