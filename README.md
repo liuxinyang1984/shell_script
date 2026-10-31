@@ -10,6 +10,7 @@
 | 脚本 | 作用 |
 |------|------|
 | `sb-fcitx` | fcitx5：拼 / 五 / En |
+| `sb-volume` | 音量 Nerd 图标 + %（`wpctl`；无则空） |
 | `sb-battery` | 电池图标 + 电量%（无 BAT* 则空输出） |
 | `sb-datetime` | `%A %m-%d %H:%M:%S` |
 

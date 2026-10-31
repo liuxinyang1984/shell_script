@@ -54,3 +54,5 @@ esac
 
 printf '%s %s\n' "$icon" "$body"
 notify "$icon" "$body"
+# dwmblocks config.h：sb-volume signal 4 → RTMIN+4
+pkill -RTMIN+4 dwmblocks 2>/dev/null || true

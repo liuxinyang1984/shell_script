@@ -1,0 +1,27 @@
+#!/bin/sh
+# dwmblocks：音量图标 + %（PipeWire / wpctl）
+# 图标与 media/vol 一致：󰝟 静音 · 󰕿 低 · 󰖀 中 · 󰕾 高
+
+command -v wpctl >/dev/null 2>&1 || exit 0
+raw=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null) || exit 0
+# "Volume: 0.55" 或 "Volume: 0.55 [MUTED]"
+pct=$(printf '%s' "$raw" | awk '{printf "%d", $2 * 100}')
+
+case "$raw" in
+*[MUTED]*)
+	icon='󰝟'
+	;;
+*)
+	if [ "$pct" -le 0 ]; then
+		icon='󰝟'
+	elif [ "$pct" -lt 34 ]; then
+		icon='󰕿'
+	elif [ "$pct" -lt 67 ]; then
+		icon='󰖀'
+	else
+		icon='󰕾'
+	fi
+	;;
+esac
+
+printf '%s %s%%' "$icon" "$pct"
