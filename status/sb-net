@@ -1,0 +1,38 @@
+#!/bin/sh
+# dwmblocks：网络（默认路由）— 文案 Lan / Wifi / Down
+
+iface=$(ip -4 route show default 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit }}')
+if [ -z "$iface" ]; then
+	printf 'Down'
+	exit 0
+fi
+
+is_wifi=0
+if [ -d "/sys/class/net/$iface/wireless" ]; then
+	is_wifi=1
+elif [ -L "/sys/class/net/$iface/phy80211" ]; then
+	is_wifi=1
+elif command -v nmcli >/dev/null 2>&1; then
+	case "$(nmcli -g GENERAL.TYPE device show "$iface" 2>/dev/null)" in
+	wifi) is_wifi=1 ;;
+	esac
+fi
+
+if [ "$is_wifi" -eq 1 ]; then
+	ssid=
+	if command -v nmcli >/dev/null 2>&1; then
+		line=$(nmcli -t -f ACTIVE,SSID device wifi list 2>/dev/null | awk -F: '$1 == "yes" { print; exit }')
+		if [ -n "$line" ]; then
+			ssid=$(printf '%s' "$line" | awk -F: '{ print $2 }')
+		fi
+		[ -n "$ssid" ] || ssid=$(nmcli -g GENERAL.CONNECTION device show "$iface" 2>/dev/null)
+	fi
+	if [ -n "$ssid" ] && [ "$ssid" != "--" ]; then
+		printf 'Wifi %s' "$ssid"
+	else
+		printf 'Wifi'
+	fi
+	exit 0
+fi
+
+printf 'Lan'

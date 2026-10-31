@@ -11,8 +11,9 @@
 |------|------|
 | `sb-fcitx` | fcitx5：拼 / 五 / En |
 | `sb-volume` | 音量 Nerd 图标 + %（`wpctl`；无则空） |
+| `sb-net` | 网络：默认路由 → `Lan` / `Wifi SSID` / `Down` |
 | `sb-battery` | 电池图标 + 电量%（无 BAT* 则空输出） |
-| `sb-datetime` | `%A %m-%d %H:%M:%S` |
+| `sb-datetime` | 默认 `󰥔 HH:MM:SS`；`toggle` / 点击展开 `󰃭` 全日期（signal 2） |
 
 ## media/
 

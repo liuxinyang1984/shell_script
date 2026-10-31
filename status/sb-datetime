@@ -1,3 +1,39 @@
 #!/bin/sh
-# dwmblocks：星期 月-日 时:分:秒（对齐原 slstatus 格式）
-exec date '+%A %m-%d %H:%M:%S'
+# dwmblocks：默认 󰥔 时:分:秒；展开 󰃭 星期 月-日 时:分:秒
+# 切换：sb-datetime toggle ｜ BLOCK_BUTTON（需 statuscmd）｜状态栏 Button1（见 dwm config）
+
+icon_clock='󰥔'
+icon_cal='󰃭'
+
+cache_dir=${XDG_CACHE_HOME:-${HOME:-/tmp}/.cache}
+mkdir -p "$cache_dir" 2>/dev/null || cache_dir=/tmp
+cache=$cache_dir/sb-datetime.expand
+
+toggle() {
+	if [ -f "$cache" ]; then
+		rm -f "$cache"
+	else
+		if ! : >"$cache" 2>/dev/null; then
+			cache=/tmp/sb-datetime.expand
+			: >"$cache"
+		fi
+	fi
+}
+
+case "${1:-}" in
+toggle)
+	toggle
+	pkill -RTMIN+2 dwmblocks 2>/dev/null || true
+	exit 0
+	;;
+esac
+
+if [ -n "${BLOCK_BUTTON:-}" ]; then
+	toggle
+fi
+
+if [ -f "$cache" ]; then
+	printf '%s %s' "$icon_cal" "$(date '+%A %m-%d %H:%M:%S')"
+else
+	printf '%s %s' "$icon_clock" "$(date '+%H:%M:%S')"
+fi
