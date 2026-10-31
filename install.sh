@@ -29,20 +29,31 @@ run_root() {
 	fi
 }
 
+install_glob() {
+	# $1=dest $2=glob  $3=root?
+	dest=$1
+	glob=$2
+	as_root=${3:-0}
+	for s in $glob; do
+		[ -f "$s" ] || continue
+		base=$(basename "$s")
+		if [ "$as_root" = 1 ]; then
+			run_root install -m 755 "$s" "$dest/$base"
+		else
+			install -m 755 "$s" "$dest/$base"
+		fi
+		echo "installed $dest/$base"
+	done
+}
+
 if [ "$MODE" = user ]; then
 	dest="$HOME/.local/bin"
 	mkdir -p "$dest"
-	for s in "$ROOT"/status/sb-*; do
-		[ -f "$s" ] || continue
-		install -m 755 "$s" "$dest/$(basename "$s")"
-		echo "installed $dest/$(basename "$s")"
-	done
+	install_glob "$dest" "$ROOT/status/sb-*" 0
+	install_glob "$dest" "$ROOT/media/*" 0
 else
 	dest=/usr/local/bin
 	run_root mkdir -p "$dest"
-	for s in "$ROOT"/status/sb-*; do
-		[ -f "$s" ] || continue
-		run_root install -m 755 "$s" "$dest/$(basename "$s")"
-		echo "installed $dest/$(basename "$s")"
-	done
+	install_glob "$dest" "$ROOT/status/sb-*" 1
+	install_glob "$dest" "$ROOT/media/*" 1
 fi
