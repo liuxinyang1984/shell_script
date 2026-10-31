@@ -1,9 +1,16 @@
 #!/bin/sh
-# dwmblocks：网络（默认路由）— 文案 Lan / Wifi / Down
+# dwmblocks：网络（默认路由）— Lan / Wifi / Down
+# 依赖 dwm status2d：^c/^b/^d 设色（无补丁时会原样显示控制串）
+
+# Gruvbox：字 #282828，底 aqua / yellow / gray
+fmt_lan='^c#282828^^b#458588^ Lan ^d^'
+fmt_wifi='^c#282828^^b#d79921^ Wifi %s ^d^'
+fmt_wifi_bare='^c#282828^^b#d79921^ Wifi ^d^'
+fmt_down='^c#ebdbb2^^b#3c3836^ Down ^d^'
 
 iface=$(ip -4 route show default 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit }}')
 if [ -z "$iface" ]; then
-	printf 'Down'
+	printf '%s' "$fmt_down"
 	exit 0
 fi
 
@@ -28,11 +35,11 @@ if [ "$is_wifi" -eq 1 ]; then
 		[ -n "$ssid" ] || ssid=$(nmcli -g GENERAL.CONNECTION device show "$iface" 2>/dev/null)
 	fi
 	if [ -n "$ssid" ] && [ "$ssid" != "--" ]; then
-		printf 'Wifi %s' "$ssid"
+		printf "$fmt_wifi" "$ssid"
 	else
-		printf 'Wifi'
+		printf '%s' "$fmt_wifi_bare"
 	fi
 	exit 0
 fi
 
-printf 'Lan'
+printf '%s' "$fmt_lan"
