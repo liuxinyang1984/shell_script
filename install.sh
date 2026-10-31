@@ -51,9 +51,11 @@ if [ "$MODE" = user ]; then
 	mkdir -p "$dest"
 	install_glob "$dest" "$ROOT/status/sb-*" 0
 	install_glob "$dest" "$ROOT/media/*" 0
+	install_glob "$dest" "$ROOT/clipboard/*" 0
 else
 	dest=/usr/local/bin
 	run_root mkdir -p "$dest"
 	install_glob "$dest" "$ROOT/status/sb-*" 1
 	install_glob "$dest" "$ROOT/media/*" 1
+	install_glob "$dest" "$ROOT/clipboard/*" 1
 fi

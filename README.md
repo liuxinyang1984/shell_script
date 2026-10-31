@@ -4,6 +4,7 @@
 
 - `status/`：状态栏一行输出（dwmblocks / tmux 等）
 - `media/`：音量 / 屏幕亮度 / 键盘背光（带 `notify-send`，供 dwm、tmux、命令行复用）
+- `clipboard/`：X11 剪贴板历史（dmenu + clipmenu；对齐本机 Hypr Super+V）
 
 ## status/
 
@@ -22,6 +23,12 @@
 | `vol` | `vol up\|down\|mute` | `wpctl`；可选 `notify-send` |
 | `bright` | `bright up\|down` | `brightnessctl`；可选 `notify-send` |
 | `kbdbl` | `kbdbl up\|down` | `brightnessctl`；设备默认 `smc::kbd_backlight`（`KBD_BACKLIGHT_DEVICE` 可覆盖） |
+
+## clipboard/
+
+| 脚本 | 用法 | 依赖 |
+|------|------|------|
+| `dmenu-clip` | dwm `Mod+v`；再按关 dmenu | `clipmenu` + `xclip`；会话起 `clipmenud` |
 
 安装到 `PREFIX/bin`（须在 PATH）：
 

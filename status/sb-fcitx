@@ -1,8 +1,27 @@
 #!/bin/sh
-# dwmblocks：当前 fcitx5 输入法（拼 / 五 / En）
+# dwmblocks：Caps 开 → 醒目 EN；否则 英 / 拼 / 五（status2d 色底）
+
+fmt_caps='^c#282828^^b#d79921^ EN ^d^'
+fmt_en='^c#ebdbb2^^b#504945^ 英 ^d^'
+fmt_py='^c#282828^^b#83a598^ 拼 ^d^'
+fmt_wb='^c#282828^^b#8f3f71^ 五 ^d^'
+
+# 勿用整段匹配 " on"：同一行还有 Num Lock
+if command -v xset >/dev/null 2>&1 \
+	&& xset q 2>/dev/null | grep -Eq 'Caps Lock:[[:space:]]+on'; then
+	printf '%s' "$fmt_caps"
+	exit 0
+fi
+
 im=$(fcitx5-remote -n 2>/dev/null) || true
 case "$im" in
-*pinyin*|*Pinyin*) printf '拼' ;;
-*wbpy*|*wubi*|*Wubi*|*WBPY*) printf '五' ;;
-*) printf 'En' ;;
+*pinyin*|*Pinyin*)
+	printf '%s' "$fmt_py"
+	;;
+*wbpy*|*wubi*|*Wubi*|*WBPY*)
+	printf '%s' "$fmt_wb"
+	;;
+*)
+	printf '%s' "$fmt_en"
+	;;
 esac
