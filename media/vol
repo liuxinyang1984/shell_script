@@ -1,11 +1,16 @@
 #!/bin/sh
-# 音量：vol up|down|mute（dwm / tmux / 命令行复用）
+# 音量：vol up|down|mute（dwm / tmux / 命令行复用；通知图标为 Nerd Font）
 set -e
 step=5%
 
+# Nerd Font (Material Design): volume-off / low / medium / high
+icon_mute="󰝟"
+icon_low="󰕿"
+icon_mid="󰖀"
+icon_high="󰕾"
+
 notify() {
 	command -v notify-send >/dev/null 2>&1 || return 0
-	# $1=icon  $2=body
 	notify-send -r 9910 -t 1200 -a vol "$1" "$2"
 }
 
@@ -30,18 +35,18 @@ raw=$(wpctl get-volume @DEFAULT_AUDIO_SINK@)
 pct=$(printf '%s' "$raw" | awk '{printf "%d", $2 * 100}')
 case "$raw" in
 *[MUTED]*)
-	icon="🔇"
-	body="${pct}%（静音）"
+	icon=$icon_mute
+	body="${pct}% muted"
 	;;
 *)
 	if [ "$pct" -le 0 ]; then
-		icon="🔇"
+		icon=$icon_mute
 	elif [ "$pct" -lt 34 ]; then
-		icon="🔈"
+		icon=$icon_low
 	elif [ "$pct" -lt 67 ]; then
-		icon="🔉"
+		icon=$icon_mid
 	else
-		icon="🔊"
+		icon=$icon_high
 	fi
 	body="${pct}%"
 	;;
