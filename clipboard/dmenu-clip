@@ -2,7 +2,7 @@
 # dmenu-clip — X11 剪贴板历史（对齐本机 Hypr：Super+V → cliphist+wofi）
 # 依赖：clipmenu、clipmenud、xclip；dmenu 配色与 dwm dmenucmd 一致
 #
-# 用法：绑 Mod+v；会话里需先起 clipmenud（见 config/x11/xinitrc）
+# 用法：绑 Mod+v；会话里需先起 clipmenud（见 config/x11/multistart/xinitrc）
 
 if ! command -v clipmenu >/dev/null 2>&1; then
 	command -v notify-send >/dev/null 2>&1 \
