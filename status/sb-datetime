@@ -1,9 +1,12 @@
 #!/bin/sh
-# dwmblocks：默认 󰥔 时:分:秒；展开 󰃭 星期 月-日 时:分:秒
-# 切换：sb-datetime toggle ｜ BLOCK_BUTTON（需 statuscmd）｜状态栏 Button1（见 dwm config）
+# dwmblocks：时间 — 图标色底 + 时刻；展开含日期
+# 切换：sb-datetime toggle
 
 icon_clock='󰥔'
 icon_cal='󰃭'
+# 图标底：Gruvbox Material yellow（替代原粉紫 #b16286）
+pill='^c#282828^^b#d8a657^'
+end='^d^'
 
 cache_dir=${XDG_CACHE_HOME:-${HOME:-/tmp}/.cache}
 mkdir -p "$cache_dir" 2>/dev/null || cache_dir=/tmp
@@ -33,7 +36,7 @@ if [ -n "${BLOCK_BUTTON:-}" ]; then
 fi
 
 if [ -f "$cache" ]; then
-	printf '%s %s' "$icon_cal" "$(date '+%A %m-%d %H:%M:%S')"
+	printf '%s %s %s %s' "$pill" "$icon_cal" "$end" "$(date '+%A %m-%d %H:%M:%S')"
 else
-	printf '%s %s' "$icon_clock" "$(date '+%H:%M:%S')"
+	printf '%s %s %s %s' "$pill" "$icon_clock" "$end" "$(date '+%H:%M:%S')"
 fi

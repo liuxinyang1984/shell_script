@@ -1,16 +1,43 @@
 #!/bin/sh
-# dwmblocks：网络（默认路由）— Lan / Wifi / Down
-# 依赖 dwm status2d：^c/^b/^d 设色（无补丁时会原样显示控制串）
+# dwmblocks：网络（默认路由）
+# 图标用 status2d 色底；后面 Lan/SSID/Down 用栏默认底
+# 󰌘 lan · 󰤟–󰤨 wifi 强度 · 󰤭 / 󰌙 断开
 
-# Gruvbox：字 #282828，底 aqua / yellow / gray
-fmt_lan='^c#282828^^b#458588^ Lan ^d^'
-fmt_wifi='^c#282828^^b#d79921^ Wifi %s ^d^'
-fmt_wifi_bare='^c#282828^^b#d79921^ Wifi ^d^'
-fmt_down='^c#ebdbb2^^b#3c3836^ Down ^d^'
+icon_lan='󰌘'
+icon_wifi1='󰤟'
+icon_wifi2='󰤢'
+icon_wifi3='󰤥'
+icon_wifi4='󰤨'
+icon_wifi_off='󰤭'
+icon_down='󰌙'
+
+# Gruvbox：色底只包图标
+pill_lan='^c#282828^^b#458588^'
+pill_wifi='^c#282828^^b#89b482^' # Gruvbox Material aqua / 青绿
+pill_down='^c#ebdbb2^^b#cc241d^'
+end='^d^'
+
+wifi_icon_by_signal() {
+	# 0–100 → 四格；读不到则满格
+	s=$1
+	if [ -z "$s" ] || [ "$s" -lt 0 ] 2>/dev/null; then
+		printf '%s' "$icon_wifi4"
+		return
+	fi
+	if [ "$s" -ge 75 ]; then
+		printf '%s' "$icon_wifi4"
+	elif [ "$s" -ge 50 ]; then
+		printf '%s' "$icon_wifi3"
+	elif [ "$s" -ge 25 ]; then
+		printf '%s' "$icon_wifi2"
+	else
+		printf '%s' "$icon_wifi1"
+	fi
+}
 
 iface=$(ip -4 route show default 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit }}')
 if [ -z "$iface" ]; then
-	printf '%s' "$fmt_down"
+	printf '%s %s %s Down' "$pill_down" "$icon_down" "$end"
 	exit 0
 fi
 
@@ -27,19 +54,26 @@ fi
 
 if [ "$is_wifi" -eq 1 ]; then
 	ssid=
+	sig=
 	if command -v nmcli >/dev/null 2>&1; then
-		line=$(nmcli -t -f ACTIVE,SSID device wifi list 2>/dev/null | awk -F: '$1 == "yes" { print; exit }')
+		line=$(nmcli -t -f ACTIVE,SSID,SIGNAL device wifi list 2>/dev/null | awk -F: '$1 == "yes" { print; exit }')
 		if [ -n "$line" ]; then
 			ssid=$(printf '%s' "$line" | awk -F: '{ print $2 }')
+			sig=$(printf '%s' "$line" | awk -F: '{ print $3 }')
 		fi
 		[ -n "$ssid" ] || ssid=$(nmcli -g GENERAL.CONNECTION device show "$iface" 2>/dev/null)
 	fi
+	# iw 备选信号
+	if [ -z "$sig" ] && command -v iw >/dev/null 2>&1; then
+		sig=$(iw dev "$iface" link 2>/dev/null | awk '/signal:/ { s=$2; gsub("-","",s); print 2*(100-s); exit }')
+	fi
+	icon=$(wifi_icon_by_signal "$sig")
 	if [ -n "$ssid" ] && [ "$ssid" != "--" ]; then
-		printf "$fmt_wifi" "$ssid"
+		printf '%s %s %s %s' "$pill_wifi" "$icon" "$end" "$ssid"
 	else
-		printf '%s' "$fmt_wifi_bare"
+		printf '%s %s %s Wifi' "$pill_wifi" "$icon" "$end"
 	fi
 	exit 0
 fi
 
-printf '%s' "$fmt_lan"
+printf '%s %s %s Lan' "$pill_lan" "$icon_lan" "$end"

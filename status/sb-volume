@@ -1,19 +1,25 @@
 #!/bin/sh
-# dwmblocks：音量图标 + %（PipeWire / wpctl）
-# 图标与 media/vol 一致：󰝟 静音 · 󰕿 低 · 󰖀 中 · 󰕾 高
+# dwmblocks：音量 — 图标色底 + 百分比
+# 󰝟 静音 · 󰕿 低 · 󰖀 中 · 󰕾 高
 
 command -v wpctl >/dev/null 2>&1 || exit 0
 raw=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null) || exit 0
-# "Volume: 0.55" 或 "Volume: 0.55 [MUTED]"
 pct=$(printf '%s' "$raw" | awk '{printf "%d", $2 * 100}')
+
+pill_ok='^c#282828^^b#458588^'
+pill_mute='^c#ebdbb2^^b#cc241d^'
+end='^d^'
 
 case "$raw" in
 *[MUTED]*)
 	icon='󰝟'
+	pill=$pill_mute
 	;;
 *)
+	pill=$pill_ok
 	if [ "$pct" -le 0 ]; then
 		icon='󰝟'
+		pill=$pill_mute
 	elif [ "$pct" -lt 34 ]; then
 		icon='󰕿'
 	elif [ "$pct" -lt 67 ]; then
@@ -24,4 +30,4 @@ case "$raw" in
 	;;
 esac
 
-printf '%s %s%%' "$icon" "$pct"
+printf '%s %s %s %s%%' "$pill" "$icon" "$end" "$pct"
