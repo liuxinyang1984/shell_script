@@ -10,7 +10,7 @@
 
 | 脚本 | 作用 |
 |------|------|
-| `sb-fcitx` | fcitx5：拼 / 五 / En |
+| `sb-fcitx` | fcitx5：Caps 黄底「英」；拼色底；五与英同底 |
 | `sb-volume` | 音量 Nerd 图标 + %（`wpctl`；无则空） |
 | `sb-net` | 网络：`Lan` / `Wifi SSID` / `Down`（status2d 色底，需 dwm 补丁） |
 | `sb-battery` | 电池图标 + 电量%（无 BAT* 则空输出） |
