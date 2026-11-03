@@ -18,7 +18,7 @@ fi
 
 export CM_LAUNCHER=dmenu
 # 与 dwm config.def.h 里 dmenucmd 对齐；列表稍长方便翻历史
-exec clipmenu -c -l 12 -bw 5 \
+exec clipmenu -c -l 12 -wm -bw 0 \
 	-fn 'Maple Mono NL NF:size=12' \
 	-nb '#282828' -nf '#a89984' \
 	-sb '#d79921' -sf '#282828'
