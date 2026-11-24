@@ -1,24 +1,4 @@
 #!/bin/sh
-# dmenu-clip — X11 剪贴板历史（对齐本机 Hypr：Super+V → cliphist+wofi）
-# 依赖：clipmenu、clipmenud、xclip；dmenu 配色与 dwm dmenucmd 一致
-#
-# 用法：绑 Mod+v；会话里需先起 clipmenud（见 config/x11/multistart/xinitrc）
-
-if ! command -v clipmenu >/dev/null 2>&1; then
-	command -v notify-send >/dev/null 2>&1 \
-		&& notify-send -u critical '剪贴板' '未安装 clipmenu（pacman -S clipmenu xclip）'
-	exit 1
-fi
-
-# 再按一次则关已开的 dmenu（与 wofi launch-clip 开关一致）
-if pgrep -x dmenu >/dev/null 2>&1; then
-	pkill -x dmenu
-	exit 0
-fi
-
-export CM_LAUNCHER=dmenu
-# 与 dwm config.def.h 里 dmenucmd 对齐；列表稍长方便翻历史
-exec clipmenu -c -l 12 -wm -bw 0 \
-	-fn 'Maple Mono NL NF:size=12' \
-	-nb '#282828' -nf '#a89984' \
-	-sb '#d79921' -sf '#282828'
+# dmenu-clip — 旧入口；转发到 rofi-clip（列表截断 + 固定宽度）
+# 保留此名以免旧键位/脚本失效。
+exec rofi-clip "$@"

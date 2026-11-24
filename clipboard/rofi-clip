@@ -1,0 +1,144 @@
+#!/bin/sh
+# rofi-clip — X11 剪贴板历史（clipmenud 缓存 + rofi）
+# 列表按显示列宽截断，避免长行撑宽；无图标
+# 依赖：clipmenud、rofi、xsel、python3
+#
+# 环境：
+#   CM_HISTLENGTH   载入条数（可上下滚动；默认 100，对齐 CM_MAX_CLIPS）
+#   CM_ROFI_LINES   窗口可见行数（默认 8）
+#   CM_PREVIEW_COLS 预览显示列（默认 64）
+
+set -e
+THEME="${ROFI_THEME:-${XDG_CONFIG_HOME:-$HOME/.config}/rofi/cde-clip.rasi}"
+PIDF="${ROFI_CLIP_PID:-/tmp/rofi-clip.pid}"
+HIST="${CM_HISTLENGTH:-100}"
+# 禁止用 LINES：bash/zsh 特殊变量，会被终端行数覆盖（曾出现 -l 33）
+ROFI_LINES="${CM_ROFI_LINES:-8}"
+PREVIEW_COLS="${CM_PREVIEW_COLS:-64}"
+CM_DIR="${CM_DIR:-${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}}"
+CACHE="$CM_DIR/clipmenu.6.$USER"
+LINE_CACHE="$CACHE/line_cache"
+
+if ! command -v rofi >/dev/null 2>&1; then
+	command -v notify-send >/dev/null 2>&1 \
+		&& notify-send -u critical '剪切板' '未安装 rofi'
+	exit 1
+fi
+
+if [ -f "$PIDF" ] && kill -0 "$(cat "$PIDF")" 2>/dev/null; then
+	kill "$(cat "$PIDF")" 2>/dev/null || true
+	exit 0
+fi
+
+if [ ! -f "$LINE_CACHE" ]; then
+	command -v notify-send >/dev/null 2>&1 \
+		&& notify-send '剪切板' '暂无记录（确认 clipmenud 在跑）'
+	exit 1
+fi
+
+list_dir=$(mktemp -d)
+trap 'rm -rf "$list_dir"' EXIT
+files="$list_dir/files"
+previews="$list_dir/previews"
+paths="$list_dir/paths"
+: >"$files"
+: >"$previews"
+: >"$paths"
+
+# 先收集最近 HIST 条对应文件；再一次性 python 截断（避免逐条起解释器）
+# clipmenu 文件名 = `cksum <<< "$preview_key"` 的整行输出（含空格）
+while IFS= read -r line; do
+	# line_cache: "<timestamp> <preview_key…>"
+	preview_key=${line#* }
+	[ -n "$preview_key" ] || continue
+	[ "$preview_key" = "$line" ] && continue
+	sum=$(printf '%s\n' "$preview_key" | cksum)
+	f="$CACHE/$sum"
+	[ -f "$f" ] || continue
+	printf '%s\n' "$f" >>"$paths"
+done <<EOF
+$(LC_ALL=C sort -rnk 1 <"$LINE_CACHE" | head -n "$HIST")
+EOF
+
+if [ ! -s "$paths" ]; then
+	command -v notify-send >/dev/null 2>&1 && notify-send '剪切板' '暂无记录'
+	exit 1
+fi
+
+PREVIEW_COLS="$PREVIEW_COLS" FILES_OUT="$files" PREVIEWS_OUT="$previews" \
+python3 - "$paths" <<'PY'
+import os, sys
+
+cols = int(os.environ.get("PREVIEW_COLS", "64"))
+files_out = os.environ["FILES_OUT"]
+previews_out = os.environ["PREVIEWS_OUT"]
+paths_file = sys.argv[1]
+
+def width(ch: str) -> int:
+	o = ord(ch)
+	if o < 0x20 or (0x7F <= o < 0xA0):
+		return 0
+	if (0x1100 <= o <= 0x115F) or (0x2329 <= o <= 0x232A) or (0x2E80 <= o <= 0xA4CF) \
+		or (0xAC00 <= o <= 0xD7A3) or (0xF900 <= o <= 0xFAFF) or (0xFE10 <= o <= 0xFE6F) \
+		or (0xFF00 <= o <= 0xFF60) or (0xFFE0 <= o <= 0xFFE6) or (0x1F300 <= o <= 0x1FAFF):
+		return 2
+	return 1
+
+def trunc(raw: str) -> str:
+	raw = raw.replace("\n", " ").replace("\t", " ")
+	while "  " in raw:
+		raw = raw.replace("  ", " ")
+	raw = raw.strip()
+	if not raw:
+		return "(空)"
+	out, w = [], 0
+	for ch in raw:
+		cw = width(ch)
+		if w + cw > cols:
+			out.append("…")
+			break
+		out.append(ch)
+		w += cw
+	return "".join(out)
+
+with open(paths_file, encoding="utf-8") as pf, \
+		open(files_out, "w", encoding="utf-8") as ff, \
+		open(previews_out, "w", encoding="utf-8") as pv:
+	for path in pf:
+		path = path.rstrip("\n")
+		if not path:
+			continue
+		try:
+			with open(path, "r", encoding="utf-8", errors="replace") as f:
+				text = trunc(f.read())
+		except OSError:
+			continue
+		ff.write(path + "\n")
+		pv.write(text + "\n")
+PY
+
+n=$(wc -l <"$previews" | tr -d ' ')
+if [ "$n" -eq 0 ]; then
+	command -v notify-send >/dev/null 2>&1 && notify-send '剪切板' '暂无记录'
+	exit 1
+fi
+
+# 只限行数、不锁高度（高度随字体/DPI 变）。-normal-window 吃 dwm CDE 边框。
+# -no-config 避开 ~/.config/rofi/config 里失效的 NsCDE.rasi。
+# stdin：全部条目（方向键/滚轮翻页）
+chosen=$(rofi -no-config -normal-window -dmenu -pid "$PIDF" \
+	-theme "$THEME" \
+	-theme-str "window { width: 640px; } listview { lines: ${ROFI_LINES}; fixed-height: true; scrollbar: true; }" \
+	-l "$ROFI_LINES" \
+	-fixed-num-lines \
+	-p '剪切板' -window-title '剪切板' <"$previews") || exit 0
+[ -n "$chosen" ] || exit 0
+
+idx=$(grep -nFx "$chosen" "$previews" | head -1 | cut -d: -f1)
+[ -n "$idx" ] || exit 1
+file=$(sed -n "${idx}p" "$files")
+[ -f "$file" ] || exit 1
+
+# 写入 CLIPBOARD；PRIMARY 一并写方便中键粘贴选中的历史项
+xsel --logfile /dev/null -i --clipboard <"$file"
+xsel --logfile /dev/null -i --primary <"$file"

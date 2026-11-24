@@ -28,7 +28,8 @@
 
 | 脚本 | 用法 | 依赖 |
 |------|------|------|
-| `dmenu-clip` | dwm `Mod+v`；再按关 dmenu | `clipmenu` + `xclip`；会话起 `clipmenud` |
+| `dmenu-clip` | 兼容入口 → `rofi-clip` | 同上 |
+| `rofi-clip` | dwm Super+v；再按关掉 | clipmenud（`CM_SELECTIONS=clipboard`、`CM_MAX_CLIPS=100`）+ rofi；默认载入 100 条可滚动、窗口 8 行（`CM_HISTLENGTH` / `CM_ROFI_LINES`）；预览按列截断 |
 
 安装到 `PREFIX/bin`（须在 PATH）：
 
