@@ -131,7 +131,7 @@ chosen=$(rofi -no-config -normal-window -dmenu -pid "$PIDF" \
 	-theme-str "window { width: 640px; } listview { lines: ${ROFI_LINES}; fixed-height: true; scrollbar: true; }" \
 	-l "$ROFI_LINES" \
 	-fixed-num-lines \
-	-p '剪切板' -window-title '剪切板' <"$previews") || exit 0
+	-p 'clip' -window-title 'clip' <"$previews") || exit 0
 [ -n "$chosen" ] || exit 0
 
 idx=$(grep -nFx "$chosen" "$previews" | head -1 | cut -d: -f1)
